@@ -7,6 +7,11 @@ import '../models/meal.dart';
 class MealDetailScreen extends StatelessWidget {
   static const routeName = '/meail-detail';
 
+  final Function _toggleFavorite;
+  final Function _isMealFavorite;
+
+  MealDetailScreen(this._toggleFavorite, this._isMealFavorite);
+
   String complexityText(Complexity complexity) {
     switch (complexity) {
       case Complexity.Simple:
@@ -101,6 +106,12 @@ class MealDetailScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(
+          _isMealFavorite(mealId) ? Icons.star : Icons.star_border,
+        ),
+        onPressed: () => _toggleFavorite(mealId),
       ),
     );
   }

@@ -1,15 +1,78 @@
-import 'package:deli_meal/screens/categories_screen.dart';
-import 'package:deli_meal/screens/category_meals_screen.dart';
-import 'package:deli_meal/screens/filters_screen.dart';
-import 'package:deli_meal/screens/meal_detail_screen.dart';
-import 'package:deli_meal/screens/tabs_screen.dart';
 import 'package:flutter/material.dart';
+
+import './screens/category_meals_screen.dart';
+import './screens/filters_screen.dart';
+import './screens/meal_detail_screen.dart';
+import './screens/tabs_screen.dart';
+import '../dummy_data.dart';
+import '../models/meal.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  List<Meal> filteredMeals = DUMMY_MEALS;
+  List<Meal> _favoriteMeals = [];
+
+
+  Map<String, bool> filters = {
+    '_isGlutenFree': false,
+    '_isLactoseFree': false,
+    '_isVegetarian': false,
+    '_isVegan': false,
+  };
+
+
+  bool _isMealFavorite(String mealId){
+    return _favoriteMeals.any((meal) => meal.id == mealId);
+  }
+
+  void _toggleFavorite(String mealId){
+
+    final existingIndex = _favoriteMeals.indexWhere((meal) => meal.id == mealId);
+    if(existingIndex >= 0){
+      setState(() {
+        _favoriteMeals.removeAt(existingIndex);
+      });
+    }
+    else{
+      setState(() {
+        _favoriteMeals.add(DUMMY_MEALS.firstWhere((meal) => meal.id == mealId));
+      });
+    }
+  }
+
+  void _saveFilters(Map<String, bool> appliedFilters) {
+    setState(() {
+      // filters['_isGlutenFree'] = appliedFilters['_isGlutenFree']!;
+      // filters['_isLactoseFree'] = appliedFilters['_isLactoseFree']!;
+      // filters['_isVegetarian'] = appliedFilters['_isVegetarian']!;
+      // filters['_isVegan'] = appliedFilters['_isVegan']!;
+
+      filters = appliedFilters;
+
+      filteredMeals = DUMMY_MEALS.where((meal) {
+        if (filters['_isGlutenFree']! && !meal.isGlutenFree) return false;
+
+        if (filters['_isLactoseFree']! && !meal.isLactoseFree) return false;
+
+        if (filters['_isVegan']! && !meal.isVegan) return false;
+
+        if (filters['_isVegetarian']! && !meal.isVegetarian) return false;
+
+        return true;
+      }).toList();
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -34,12 +97,12 @@ class MyApp extends StatelessWidget {
               ),
             ),
       ),
-      home: TabsScreen(),
+      home: TabsScreen(_favoriteMeals),
       routes: {
         // '/': (ctx) => TabsScreen(),
-        CategoryMealsScreen.routeName: (ctx) => CategoryMealsScreen(),
-        MealDetailScreen.routeName: (ctx) => MealDetailScreen(),
-        FiltersScreen.routeName: (ctx) => FiltersScreen(),
+        CategoryMealsScreen.routeName: (ctx) => CategoryMealsScreen(filteredMeals),
+        MealDetailScreen.routeName: (ctx) => MealDetailScreen(_toggleFavorite, _isMealFavorite),
+        FiltersScreen.routeName: (ctx) => FiltersScreen(_saveFilters, filters),
       },
     );
   }
